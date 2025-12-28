@@ -1,0 +1,1550 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ace Digital Fund Desktop</title>
+  <style>
+    :root {
+      --bg: #060c16;
+      --panel: #0c1421;
+      --panel-soft: #111b2c;
+      --border: #162236;
+      --gridline: rgba(70,100,130,0.07);
+      --text-main: #dce2ec;
+      --text-dim: #8696ae;
+      --accent: #3f8bc6;
+      --accent-2: #59b49d;
+      --positive: #3dd598;
+      --negative: #e05b5b;
+      --grid-gap: 12px;
+      --font: "Space Grotesk", "Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background:
+        linear-gradient(90deg, var(--gridline) 1px, transparent 1px) 0 0 / 120px 120px,
+        linear-gradient(0deg, var(--gridline) 1px, transparent 1px) 0 0 / 120px 120px,
+        radial-gradient(circle at 25% 20%, rgba(43,96,152,0.22), transparent 34%),
+        radial-gradient(circle at 80% 10%, rgba(110,214,255,0.18), transparent 36%),
+        var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: 76px 1fr;
+      grid-template-areas:
+        "topbar"
+        "main";
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+    .hud-lines {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(135deg, rgba(110,214,255,0.07), transparent 18%),
+        linear-gradient(225deg, rgba(255,179,71,0.06), transparent 22%);
+      mix-blend-mode: screen;
+      z-index: 1;
+    }
+    .topbar {
+      grid-area: topbar;
+      background: rgba(9,15,26,0.9);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.35);
+    }
+    .top-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .emblem {
+      height: 50px;
+      width: 140px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: linear-gradient(135deg, #0f1d31, #0b131f);
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--accent);
+      box-shadow: inset 0 0 24px rgba(110,214,255,0.12);
+    }
+    .flightline {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .flightline .title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+    }
+    .flightline .sub {
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+    .status {
+      padding: 8px 12px;
+      background: linear-gradient(135deg, rgba(61,213,152,0.16), rgba(61,213,152,0.04));
+      color: var(--positive);
+      border-radius: 10px;
+      font-size: 12px;
+      border: 1px solid rgba(61,213,152,0.4);
+      box-shadow: 0 0 18px rgba(61,213,152,0.12);
+    }
+    .chip-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: 10px;
+    }
+    .chip {
+      padding: 6px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text-dim);
+      font-size: 12px;
+      cursor: pointer;
+      transition: 0.2s ease;
+      user-select: none;
+    }
+    .chip.active { color: var(--accent); border-color: rgba(110,214,255,0.7); background: rgba(110,214,255,0.08); }
+    .top-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-dim);
+      font-size: 12px;
+    }
+    .main {
+      grid-area: main;
+      padding: 16px 18px 22px;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-auto-rows: minmax(120px, auto);
+      gap: var(--grid-gap);
+      position: relative;
+      z-index: 2;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 14px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.02);
+      position: relative;
+      overflow: hidden;
+      transition: box-shadow 0.15s ease;
+    }
+    .panel::after {
+      content: "";
+      position: absolute;
+      inset: 1px;
+      border-radius: 12px;
+      border: 1px solid rgba(110,214,255,0.04);
+      pointer-events: none;
+    }
+    .panel h3 {
+      margin: 0;
+      font-size: 13px;
+      letter-spacing: 0.3px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+    .kpi-row {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: var(--grid-gap);
+    }
+    .kpi {
+      background: linear-gradient(145deg, var(--panel), #0a1321);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi::before {
+      content: "";
+      position: absolute;
+      right: -20px;
+      top: -30px;
+      width: 120px;
+      height: 120px;
+      background: radial-gradient(circle, rgba(110,214,255,0.18), transparent 60%);
+      transform: rotate(-8deg);
+    }
+    .kpi small { color: var(--text-dim); letter-spacing: 0.2px; }
+    .kpi .value { font-size: 23px; font-weight: 700; }
+    .kpi .delta { color: var(--positive); font-size: 12px; }
+    .kpi .delta.negative { color: var(--negative); }
+    .chart-area { flex: 1; display: grid; grid-template-rows: 1fr 130px; gap: 12px; }
+    .chart-box {
+      background: var(--panel-soft);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+    .chart-box::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(110,214,255,0.08), transparent 45%);
+      pointer-events: none;
+    }
+    .chart-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+      background-size: 100% 36px, 80px 100%;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    svg { width: 100%; height: 100%; }
+    .tooltip {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(7,12,22,0.92);
+      border: 1px solid rgba(110,214,255,0.35);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--text-main);
+      pointer-events: none;
+      box-shadow: 0 14px 28px rgba(0,0,0,0.4), 0 0 0 1px rgba(110,214,255,0.1);
+      min-width: 140px;
+      line-height: 1.5;
+      letter-spacing: 0.2px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      color: var(--text-main);
+    }
+    th, td {
+      padding: 6px 6px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    th { color: var(--text-dim); font-weight: 600; }
+    .heat { border-radius: 8px; padding: 6px; }
+    .allocation {
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      gap: 12px;
+      align-items: center;
+    }
+    .donut {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: conic-gradient(var(--accent) 0 72%, var(--accent-2) 72% 100%);
+      display: grid;
+      place-items: center;
+      position: relative;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.35);
+    }
+    .donut::after {
+      content: "";
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: var(--panel);
+      border: 1px solid var(--border);
+    }
+    .donut .label {
+      position: absolute;
+      font-weight: 700;
+      font-size: 13px;
+      text-align: center;
+    }
+    .legend {
+      display: grid;
+      gap: 8px;
+      font-size: 12px;
+    }
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-dim);
+    }
+    .legend-color {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+    }
+    .fx-bars {
+      display: grid;
+      gap: 10px;
+      margin-top: 6px;
+    }
+    .bar {
+      background: var(--panel-soft);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 9px 11px;
+      display: grid;
+      gap: 6px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+    }
+    .bar-fill {
+      height: 8px;
+      border-radius: 6px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      width: 0;
+    }
+    .bar label {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-dim);
+    }
+    .risk-cockpit {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 14px;
+    }
+    .gauges {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .gauge {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      background: conic-gradient(var(--accent) var(--value, 0%), rgba(255,255,255,0.06) 0);
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 28px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.03);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+    .gauge::after {
+      content: "";
+      position: absolute;
+      width: 76%;
+      height: 76%;
+      border-radius: 50%;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+    .gauge .readout {
+      position: relative;
+      text-align: center;
+      z-index: 1;
+      font-weight: 700;
+      font-size: 18px;
+    }
+    .gauge small { display: block; color: var(--text-dim); font-size: 11px; margin-top: 4px; }
+    .risk-table {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      font-size: 12px;
+    }
+    .risk-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 10px;
+      background: var(--panel-soft);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-dim);
+    }
+    .risk-row strong { color: var(--text-main); }
+    .commentary {
+      background: linear-gradient(145deg, #0f1a2a, #0b121d);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-main);
+    }
+    .commentary small { color: var(--text-dim); }
+    .commentary .toggle { color: var(--accent); cursor: pointer; user-select: none; }
+    .fund-info {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px 12px;
+      color: var(--text-dim);
+      font-size: 12px;
+    }
+    .fund-info strong { color: var(--text-main); }
+    .action-panel {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      width: 320px;
+      background: rgba(9,15,26,0.92);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 12px 10px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.32);
+      font-size: 13px;
+      z-index: 4;
+      display: grid;
+      gap: 6px;
+    }
+    .action-panel h4 {
+      margin: 0 0 6px;
+      font-size: 13px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      letter-spacing: 0.4px;
+    }
+    .action-panel .body { color: var(--text-main); line-height: 1.4; }
+    .action-close {
+      justify-self: end;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text-main);
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .clickable { cursor: pointer; }
+    .active-blink {
+      box-shadow: 0 0 0 2px rgba(110,214,255,0.35) !important;
+      transition: box-shadow 0.2s ease;
+    }
+    .perf-scroll {
+      overflow: hidden;
+      padding-bottom: 6px;
+    }
+    .perf-scroll table { width: 100%; }
+    .axis-label {
+      fill: var(--text-dim);
+      font-size: 11px;
+      font-family: var(--font);
+      opacity: 0.9;
+      letter-spacing: 0.2px;
+    }
+    .axis-grid {
+      stroke: rgba(255,255,255,0.06);
+      stroke-width: 1;
+      stroke-dasharray: 2 4;
+    }
+    /* Fullscreen overlay */
+    .fs-btn {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text-main);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      align-self: flex-start;
+    }
+    .fs-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(5,10,18,0.92);
+      backdrop-filter: blur(6px);
+      z-index: 20;
+      display: none;
+      flex-direction: column;
+      padding: 12px;
+      gap: 10px;
+    }
+    .fs-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text-main);
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .fs-close {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.08);
+      color: var(--text-main);
+      border-radius: 10px;
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+    .fs-content {
+      flex: 1;
+      display: grid;
+      grid-template-rows: 2fr 1fr;
+      gap: 12px;
+    }
+    .positions {
+      display: grid;
+      gap: 8px;
+      font-size: 12px;
+    }
+    .position-row {
+      display: grid;
+      grid-template-columns: 1fr 70px 70px 60px;
+      gap: 8px;
+      padding: 8px 10px;
+      background: var(--panel-soft);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-main);
+    }
+    .position-head {
+      display: grid;
+      grid-template-columns: 1fr 70px 70px 60px;
+      gap: 8px;
+      color: var(--text-dim);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .feed {
+      display: grid;
+      gap: 10px;
+      font-size: 13px;
+    }
+    .feed-item {
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: var(--panel-soft);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      display: grid;
+      gap: 4px;
+      cursor: pointer;
+    }
+    .feed-item small { color: var(--text-dim); }
+    .ticker {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
+      font-size: 12px;
+    }
+    .ticker-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--panel-soft);
+    }
+    .ticker strong { font-size: 16px; }
+    .pill-btn {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text-main);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    @media (max-width: 1200px) {
+      .kpi-row { grid-template-columns: repeat(3, 1fr); }
+      .main { grid-template-columns: repeat(6, 1fr); }
+      .panel[style*="span 8"] { grid-column: 1 / -1 !important; }
+      .risk-cockpit { grid-template-columns: 1fr; }
+      .gauges { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 800px) {
+      .main { grid-template-columns: repeat(1, 1fr); }
+      .kpi-row { grid-template-columns: repeat(2, 1fr); }
+      .gauges { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 600px) {
+      .kpi-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="hud-lines"></div>
+  <header class="topbar">
+    <div class="top-left">
+      <div class="emblem">ACE DESK</div>
+      <div class="flightline">
+        <div class="title">Ace Fund</div>
+        <div class="sub">Norge • AIF</div>
+      </div>
+      <div class="chip-row">
+        <div class="chip active" data-range="1M">1M</div>
+        <div class="chip" data-range="3M">3M</div>
+        <div class="chip" data-range="YTD">YTD</div>
+        <div class="chip" data-range="1Y">1Y</div>
+        <div class="chip" data-range="3Y">3Y</div>
+        <div class="chip" data-range="ALL">All</div>
+      </div>
+    </div>
+    <div class="top-right">
+      <span>Sist oppdatert: 21.12.2024 12:05</span>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="kpi-row">
+      <div class="kpi clickable" data-detail="BTC pris (USD)|Siste pris fra CoinGecko.|">
+        <small>BTC pris (USD)</small>
+        <div class="value" id="kpi-price">--</div>
+        <div class="delta" id="kpi-24h">--</div>
+      </div>
+      <div class="kpi clickable" data-detail="30 dager|Endring siste 30 dager.|">
+        <small>30 dager</small>
+        <div class="value" id="kpi-30d">--</div>
+        <div class="delta" id="kpi-30d-delta">--</div>
+      </div>
+      <div class="kpi clickable" data-detail="YTD|Årsavkastning hittil.|">
+        <small>YTD</small>
+        <div class="value" id="kpi-ytd">--</div>
+        <div class="delta" id="kpi-ytd-delta">--</div>
+      </div>
+      <div class="kpi clickable" data-detail="Volatilitet|Annualisert volatilitet (30d).|">
+        <small>Vol (ann.)</small>
+        <div class="value" id="kpi-vol">--</div>
+        <div class="delta negative" id="kpi-vol-note">--</div>
+      </div>
+      <div class="kpi clickable" data-detail="Max Drawdown|Største fall i perioden.|">
+        <small>Max Drawdown</small>
+        <div class="value" id="kpi-dd">--</div>
+        <div class="delta negative" id="kpi-dd-now">--</div>
+      </div>
+      <div class="kpi clickable" data-detail="Sharpe|Sharpe siste 12 mnd.|">
+        <small>Sharpe</small>
+        <div class="value" id="kpi-sharpe">--</div>
+        <div class="delta" id="kpi-sharpe-note">--</div>
+      </div>
+    </section>
+
+    <section class="panel" data-id="nav" style="grid-column: span 8;">
+      <h3>Verdigraf</h3>
+      <button class="fs-btn" id="fs-open">Fullskjerm</button>
+      <div class="chart-area">
+        <div class="chart-box">
+          <div class="chart-grid"></div>
+          <svg id="nav-chart" viewBox="0 0 600 260" preserveAspectRatio="none"></svg>
+          <div class="tooltip" id="nav-tip">Dato: 0<br>Verdi: 0<br>Retur: 0%</div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-grid"></div>
+          <svg id="dd-chart" viewBox="0 0 600 120" preserveAspectRatio="none"></svg>
+          <div class="tooltip" id="dd-tip" style="top: auto; left: 12px; right: auto; bottom: 8px;">Max DD: 0%</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" data-id="perf" style="grid-column: span 4;">
+      <div style="display:grid; grid-template-rows: auto auto 1fr auto; gap: 14px;">
+        <h3>Performance</h3>
+        <div class="perf-scroll">
+          <table id="perf-table"></table>
+        </div>
+        <h3 style="margin-top: 4px;">Allocation</h3>
+        <div class="allocation">
+          <div class="donut">
+            <div class="label">72%<br><small>aksjer</small></div>
+          </div>
+          <div class="legend">
+            <div class="legend-row"><div class="legend-color" style="background: var(--accent);"></div> Aksjer: 72%</div>
+            <div class="legend-row"><div class="legend-color" style="background: var(--accent-2);"></div> Kontanter: 28% (1.4 MNOK)</div>
+            <div class="legend-row" style="color:var(--text-dim);">Gebyrer: 2% / 20% • Struktur: AIF</div>
+            <div class="legend-row" style="color:var(--text-main);">Netto innskudd (mnd): +0.3 MNOK</div>
+            <div class="legend-row" style="color:var(--text-main);">Antall handler (mnd): 18</div>
+            <div class="legend-row" style="color:var(--text-main);">Kontant buffer: 40 dager drift</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" data-id="risk" style="grid-column: span 8;">
+      <h3>Risk cockpit</h3>
+      <div class="risk-cockpit">
+        <div class="gauges">
+          <div class="gauge clickable" data-detail="Sharpe|Sharpe (12m) beregnet på daglige avkastninger.|" style="--value: 0%;">
+            <div class="readout"><span id="g-sharpe-val">--</span><small>Sharpe</small></div>
+          </div>
+          <div class="gauge clickable" data-detail="Sortino|Sortino (12m) med downside dev.|" style="--value: 0%;">
+            <div class="readout"><span id="g-sortino-val">--</span><small>Sortino</small></div>
+          </div>
+          <div class="gauge clickable" data-detail="Max Drawdown|Historisk maks nedtrekk fra topp (siste år).|" style="--value: 0%;">
+            <div class="readout"><span id="g-dd-val">--</span><small>Max DD (12m)</small></div>
+          </div>
+          <div class="gauge clickable" data-detail="Volatilitet|Annualisert 30d.|" style="--value: 0%;">
+            <div class="readout"><span id="g-vol-val">--</span><small>Vol (ann.)</small></div>
+          </div>
+        </div>
+        <div class="risk-table">
+          <div class="risk-row clickable" data-detail="Forrige mnd|Siste månedlig avkastning.|"><span>Forrige mnd</span><strong id="risk-last-month">--</strong></div>
+          <div class="risk-row clickable" data-detail="3 mnd|Tre måneders avkastning.|"><span>3 mnd</span><strong id="risk-3m">--</strong></div>
+          <div class="risk-row clickable" data-detail="YTD|Årsavkastning hittil.|"><span>YTD</span><strong id="risk-ytd">--</strong></div>
+          <div class="risk-row clickable" data-detail="12 mnd|Rullerende 12 måneders avkastning.|"><span>12 mnd</span><strong id="risk-12m">--</strong></div>
+          <div class="risk-row clickable" data-detail="36 mnd|Rullerende 36 måneders avkastning.|"><span>36 mnd</span><strong>n/a</strong></div>
+          <div class="risk-row clickable" data-detail="Totalt (annualisert)|Annualisert totalavkastning.|"><span>Totalt (annualisert)</span><strong id="risk-ann">--</strong></div>
+          <div class="risk-row clickable" data-detail="Vinnende mnd|Andel måneder med positiv avkastning.|"><span>Vinnende mnd</span><strong id="risk-win">--</strong></div>
+          <div class="risk-row clickable" data-detail="Snitt vinnermnd|Snitt for positive måneder.|"><span>Snitt vinnermnd</span><strong id="risk-avg-win">--</strong></div>
+          <div class="risk-row clickable" data-detail="Snitt tapermnd|Snitt for negative måneder.|"><span>Snitt tapermnd</span><strong id="risk-avg-loss">--</strong></div>
+          <div class="risk-row clickable" data-detail="Akkumulert|Kumulativ avkastning.|"><span>Akkumulert</span><strong id="risk-cum">--</strong></div>
+          <div class="risk-row clickable" data-detail="Sterling|Sterling ratio.|"><span>Sterling</span><strong id="risk-sterling">--</strong></div>
+          <div class="risk-row clickable" data-detail="Calmar|Calmar ratio.|"><span>Calmar</span><strong id="risk-calmar">--</strong></div>
+          <div class="risk-row clickable" data-detail="Skevhet|Skewness.|"><span>Skevhet</span><strong id="risk-skew">--</strong></div>
+          <div class="risk-row clickable" data-detail="Kurtosis|Kurtosis.|"><span>Kurtosis</span><strong id="risk-kurt">--</strong></div>
+          <div class="risk-row clickable" data-detail="Korrelasjon|Korrelasjon vs S&P 500.|"><span>Korr. S&P 500</span><strong>n/a</strong></div>
+          <div class="risk-row clickable" data-detail="Downside dev.|Downside deviation.|"><span>Downside dev.</span><strong id="risk-downside">--</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" data-id="fx" style="grid-column: span 4;">
+      <h3>FX Exposure</h3>
+      <div class="fx-bars">
+        <div class="bar clickable" data-detail="FX NOK|Andel i NOK.|65%">
+          <label><span>NOK</span><span>65%</span></label>
+          <div class="bar-fill" style="width:65%;"></div>
+        </div>
+        <div class="bar clickable" data-detail="FX USD|Andel i USD.|35%">
+          <label><span>USD</span><span>35%</span></label>
+          <div class="bar-fill" style="width:35%; background: linear-gradient(90deg, #ffb347, #ff7f5f);"></div>
+        </div>
+      </div>
+      <div style="margin-top: 10px; color: var(--text-dim); font-size: 12px;">Spot USDNOK: 10.85</div>
+      <div style="margin-top: 6px; color: var(--text-dim); font-size: 12px;">AUM per valuta: NOK 3.25m • USD 1.75m</div>
+    </section>
+
+    <section class="panel" data-id="commentary" style="grid-column: span 8;">
+      <h3>Market commentary</h3>
+      <div class="commentary">
+        <small>Uke 51</small>
+        <div id="commentary-body">Risikobudsjett ble holdt lavt gjennom uroen i USDNOK. Aksjeeksponeringen ligger på 72% med fokus på nordiske large caps; resten cash for å plukke spread i januar. Ingen større endringer i faktorbidraget.</div>
+        <small class="toggle" id="commentary-toggle">Les mer →</small>
+      </div>
+    </section>
+
+    <section class="panel" data-id="btc" style="grid-column: span 4;">
+      <h3>BTC fra CoinGecko</h3>
+      <div class="ticker">
+        <div class="ticker-row">
+          <span>Pris (USD)</span>
+          <strong id="btc-usd">--</strong>
+        </div>
+        <div class="ticker-row">
+          <span>Pris (NOK)</span>
+          <strong id="btc-nok">--</strong>
+        </div>
+        <div class="ticker-row">
+          <span>24t endring</span>
+          <strong id="btc-chg">--</strong>
+        </div>
+        <div class="ticker-row">
+          <button class="pill-btn" id="btc-refresh">Oppdater</button>
+          <small id="btc-status" style="color:var(--text-dim);">Henter...</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" data-id="feed" style="grid-column: span 8;">
+      <h3>Forvalter-feed</h3>
+      <div class="feed">
+        <div class="feed-item clickable" data-detail="Forvalter|Økte aksjeeksponering til 72% etter lavere volatilitet i USDNOK.|Mandag kl 09:30">
+          <small>Mandag 09:30</small>
+          <div>Økte aksjeeksponering til 72% etter roligere USDNOK.</div>
+        </div>
+        <div class="feed-item clickable" data-detail="Forvalter|Reduserte energi med 1% etter svakere spread.|Tirsdag kl 14:15">
+          <small>Tirsdag 14:15</small>
+          <div>Reduserte energi med 1% etter svakere spread.</div>
+        </div>
+        <div class="feed-item clickable" data-detail="Forvalter|Holder cash-buffer på 28% for januar-rotasjon.|Onsdag kl 10:05">
+          <small>Onsdag 10:05</small>
+          <div>Holder cash-buffer på 28% for januar-rotasjon.</div>
+        </div>
+        <div class="feed-item clickable" data-detail="Forvalter|Ingen nye risk-endringer; følger USDNOK tett.|Onsdag kl 16:40">
+          <small>Onsdag 16:40</small>
+          <div>Ingen nye risk-endringer; følger USDNOK tett.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" data-id="positions" style="grid-column: span 4;">
+      <h3>Topp 5 posisjoner</h3>
+      <div class="position-head">
+        <span>Navn</span><span>Vekt</span><span>P/L mtd</span><span>Beta</span>
+      </div>
+      <div class="positions">
+        <div class="position-row clickable" data-detail="Posisjon|Nordic Tech ASA – large cap teknologiselskap.|Vekt 14% • P/L +1.8% mtd • Beta 1.05"><span>Nordic Tech ASA</span><span>14%</span><span style="color:var(--positive);">+1.8%</span><span>1.05</span></div>
+        <div class="position-row clickable" data-detail="Posisjon|Oslo Energy Partners – energisektor.|Vekt 12% • P/L -0.4% mtd • Beta 0.92"><span>Oslo Energy Partners</span><span>12%</span><span style="color:var(--negative);">-0.4%</span><span>0.92</span></div>
+        <div class="position-row clickable" data-detail="Posisjon|Scandi Industrials – industri/eksport.|Vekt 10% • P/L +0.9% mtd • Beta 0.88"><span>Scandi Industrials</span><span>10%</span><span style="color:var(--positive);">+0.9%</span><span>0.88</span></div>
+        <div class="position-row clickable" data-detail="Posisjon|Nordic Financial Group – finans.|Vekt 9% • P/L +0.5% mtd • Beta 1.00"><span>Nordic Financial Group</span><span>9%</span><span style="color:var(--positive);">+0.5%</span><span>1.00</span></div>
+        <div class="position-row clickable" data-detail="Posisjon|Global Healthcare AB – helse.|Vekt 8% • P/L +0.3% mtd • Beta 0.70"><span>Global Healthcare AB</span><span>8%</span><span style="color:var(--positive);">+0.3%</span><span>0.70</span></div>
+      </div>
+    </section>
+
+    <section class="panel" data-id="about" style="grid-column: 1 / -1;">
+      <h3>Om fondet</h3>
+      <div class="fund-info">
+        <div>Domicil</div><strong>Norge</strong>
+        <div>Struktur</div><strong>AIF</strong>
+        <div>Oppstart</div><strong>Nov 2025</strong>
+        <div>Forvalter</div><strong>Ace Funds AS</strong>
+        <div>Adresse</div><strong>Haakon VIIs gate 1, 0161 Oslo</strong>
+        <div>E-post</div><strong>ah@acefunds.no</strong>
+        <div>Nettside</div><strong>acedigital.no/acefund</strong>
+        <div>Gebyrer</div><strong>2.00% + 20.00%</strong>
+        <div>AUM (NOK)</div><strong>5 000 000</strong>
+      </div>
+    </section>
+  </main>
+  <div class="action-panel" id="action-panel">
+    <button class="action-close" id="action-close">Lukk ✕</button>
+    <h4>Detalj</h4>
+    <div class="body">Trykk på kort, grafer eller tabeller for mer info.</div>
+  </div>
+
+  <div class="fs-overlay" id="fs-overlay">
+    <div class="fs-bar">
+      <span>Verdigraf • Fullskjerm</span>
+      <button class="fs-close" id="fs-close">Lukk</button>
+    </div>
+    <div class="fs-content">
+      <div class="chart-box" style="height:100%;">
+        <div class="chart-grid"></div>
+        <svg id="nav-chart-fs" viewBox="0 0 1000 400" preserveAspectRatio="none"></svg>
+        <div class="tooltip" id="nav-tip-fs">Dato: 0<br>Verdi: 0<br>Retur: 0%</div>
+      </div>
+      <div class="chart-box" style="height:100%;">
+        <div class="chart-grid"></div>
+        <svg id="dd-chart-fs" viewBox="0 0 1000 200" preserveAspectRatio="none"></svg>
+        <div class="tooltip" id="dd-tip-fs" style="top:auto; left:12px; bottom:8px;">Max DD: 0%</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let navSeries = {};
+    let monthlyPerf = {};
+    let priceData = [];
+    let dailyReturns = [];
+    let metrics = {};
+    let activePerf = "base";
+    let activeRange = "1M";
+    const mainEl = document.querySelector(".main");
+    const actionPanel = document.getElementById("action-panel");
+    const actionClose = document.getElementById("action-close");
+    const btcUsd = document.getElementById("btc-usd");
+    const btcNok = document.getElementById("btc-nok");
+    const btcChg = document.getElementById("btc-chg");
+    const btcStatus = document.getElementById("btc-status");
+    const btcRefresh = document.getElementById("btc-refresh");
+    let priceSpotUsd = null;
+    let priceSpotNok = null;
+    let price24h = null;
+    let priceProvider = "coingecko";
+    let navPoints = [];
+    let ddPoints = [];
+    let navDates = [];
+    const dayMs = 24 * 60 * 60 * 1000;
+
+    function buildDates(slice) {
+      return slice.map(d => formatDate(d.t || d));
+    }
+    function formatDate(d) {
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const yy = String(d.getFullYear()).slice(-2);
+      return `${dd}.${mm}.${yy}`;
+    }
+    function formatAxisDate(val) {
+      if (!val) return "";
+      return val;
+    }
+
+    function drawLine(svgId, data, options = {}) {
+      const svg = document.getElementById(svgId);
+      const width = svg.viewBox.baseVal.width;
+      const height = svg.viewBox.baseVal.height;
+      svg.innerHTML = "";
+      if (!data || !data.length) return;
+      const min = Math.min(...data);
+      const max = Math.max(...data);
+      const range = (max - min) || 1;
+      const step = width / (data.length - 1);
+      navDates = navDates.length ? navDates : buildDates(data.map((v,i)=>({t:new Date(Date.now()- (data.length-i-1)*dayMs)})));
+      const points = data.map((v, i) => {
+        const x = i * step;
+        const y = height - ((v - min) / range) * (height - 20) - 10;
+        return [x, y];
+      });
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      const d = points.map(([x,y], i) => (i ? "L" : "M") + x + " " + y).join(" ");
+      path.setAttribute("d", d);
+      path.setAttribute("fill", "none");
+      path.setAttribute("stroke", options.stroke || "url(#grad)");
+      path.setAttribute("stroke-width", 2.5);
+      const fill = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      fill.setAttribute("d", d + ` L ${width} ${height} L 0 ${height} Z`);
+      fill.setAttribute("fill", "url(#fillGrad)");
+      const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+      defs.innerHTML = `
+        <linearGradient id="grad" x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0%" stop-color="var(--accent)" />
+          <stop offset="100%" stop-color="var(--accent-2)" />
+        </linearGradient>
+        <linearGradient id="fillGrad" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stop-color="rgba(110,214,255,0.28)" />
+          <stop offset="100%" stop-color="rgba(16,28,45,0.6)" />
+        </linearGradient>`;
+      svg.appendChild(defs);
+      svg.appendChild(fill);
+      svg.appendChild(path);
+      // Axis and labels
+      const axis = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const axisLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      axisLine.setAttribute("x1", 0);
+      axisLine.setAttribute("x2", width);
+      axisLine.setAttribute("y1", height - 6);
+      axisLine.setAttribute("y2", height - 6);
+      axisLine.setAttribute("stroke", "rgba(255,255,255,0.08)");
+      axisLine.setAttribute("stroke-width", 1);
+      axis.appendChild(axisLine);
+      const ticks = Math.max(3, Math.min(10, Math.floor(width / 90)));
+      for (let i = 0; i <= ticks; i++) {
+        const idx = Math.round(i * (data.length - 1) / ticks);
+        const tx = idx * step;
+        const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        label.setAttribute("x", tx);
+        label.setAttribute("y", height - 2);
+        label.setAttribute("class", "axis-label");
+        label.setAttribute("text-anchor", i === 0 ? "start" : i === ticks ? "end" : "middle");
+        label.textContent = formatAxisDate(navDates[idx]);
+        axis.appendChild(label);
+        if (i !== 0 && i !== ticks) {
+          const grid = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          grid.setAttribute("x1", tx);
+          grid.setAttribute("x2", tx);
+          grid.setAttribute("y1", 6);
+          grid.setAttribute("y2", height - 10);
+          grid.setAttribute("class", "axis-grid");
+          axis.appendChild(grid);
+        }
+      }
+      svg.appendChild(axis);
+      // Crosshair elements
+      const cross = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      cross.setAttribute("id", "nav-cross");
+      cross.setAttribute("y1", 0);
+      cross.setAttribute("y2", height);
+      cross.setAttribute("stroke", "rgba(110,214,255,0.4)");
+      cross.setAttribute("stroke-width", 1);
+      cross.setAttribute("opacity", 0);
+      const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      dot.setAttribute("id", "nav-dot");
+      dot.setAttribute("r", 4);
+      dot.setAttribute("fill", "var(--accent)");
+      dot.setAttribute("stroke", "#0a0f1a");
+      dot.setAttribute("stroke-width", 1);
+      dot.setAttribute("opacity", 0);
+      svg.appendChild(cross);
+      svg.appendChild(dot);
+      navPoints = points;
+      return { points, min, max };
+    }
+    function drawDrawdown(svgId, data) {
+      if (!data || !data.length) return { maxDD: 0 };
+      let maxPeak = data[0];
+      let maxDD = 0;
+      const dd = data.map(v => {
+        maxPeak = Math.max(maxPeak, v);
+        const d = (v - maxPeak) / maxPeak;
+        maxDD = Math.min(maxDD, d);
+        return d;
+      });
+      const scaled = dd.map(v => v * 100);
+      const svg = document.getElementById(svgId);
+      const width = svg.viewBox.baseVal.width;
+      const height = svg.viewBox.baseVal.height;
+      svg.innerHTML = "";
+      const min = Math.min(...scaled);
+      const step = width / (scaled.length - 1);
+      const points = scaled.map((v, i) => {
+        const x = i * step;
+        const y = height - ((v - min) / (0 - min)) * (height - 10) - 5;
+        return [x, y];
+      });
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      const d = points.map(([x,y], i) => (i ? "L" : "M") + x + " " + y).join(" ");
+      path.setAttribute("d", d);
+      path.setAttribute("fill", "rgba(255,107,107,0.22)");
+      path.setAttribute("stroke", "var(--negative)");
+      path.setAttribute("stroke-width", 2);
+      svg.appendChild(path);
+      const cross = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      cross.setAttribute("id", "dd-cross");
+      cross.setAttribute("y1", 0);
+      cross.setAttribute("y2", height);
+      cross.setAttribute("stroke", "rgba(255,107,107,0.5)");
+      cross.setAttribute("stroke-width", 1);
+      cross.setAttribute("opacity", 0);
+      const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      dot.setAttribute("id", "dd-dot");
+      dot.setAttribute("r", 4);
+      dot.setAttribute("fill", "var(--negative)");
+      dot.setAttribute("stroke", "#0a0f1a");
+      dot.setAttribute("stroke-width", 1);
+      dot.setAttribute("opacity", 0);
+      svg.appendChild(cross);
+      svg.appendChild(dot);
+      ddPoints = points;
+      return { maxDD: (maxDD * 100).toFixed(1) };
+    }
+    function buildPerfTable(data) {
+      const months = Object.keys(data);
+      const table = document.getElementById("perf-table");
+      const first = months.slice(0, 6);
+      const second = months.slice(6, 12);
+      const year = months[12] || "År";
+      let html = "<tr>" + first.map(m => `<th>${m}</th>`).join("") + "</tr><tr>";
+      html += first.map(m => cell(data[m])).join("") + "</tr>";
+      html += "<tr>" + second.map(m => `<th>${m}</th>`).join("") + "</tr><tr>";
+      html += second.map(m => cell(data[m])).join("") + "</tr>";
+      html += `<tr><th colspan="6">${year}</th></tr><tr><td colspan="6">${cell(data[year], true)}</td></tr>`;
+      table.innerHTML = html;
+      function cell(v, raw = false) {
+        if (v === undefined) {
+          const empty = `<div class="heat" style="background:rgba(255,255,255,0.05);">-</div>`;
+          return raw ? empty : `<td>${empty}</td>`;
+        }
+        const val = v === "n/a" ? "n/a" : (typeof v === "number" ? v.toFixed(1) + "%" : v);
+        const color = v === "n/a" ? "rgba(255,255,255,0.05)" : (v >= 0 ? "rgba(61,213,152,0.18)" : "rgba(255,107,107,0.18)");
+        if (raw) return `<div class="heat" style="background:${color}; text-align:center;">${val}</div>`;
+        return `<td><div class="heat" style="background:${color};">${val}</div></td>`;
+      }
+    }
+    async function initData() {
+      try {
+        await loadHistory();
+      } catch (err) {
+        console.error(err);
+        btcStatus.textContent = "Bruker fallback-data";
+        buildFallbackData();
+      }
+      computeSeries();
+      // Hvis historikk fortsatt er tom, bruk fallback
+      if (!navSeries["ALL"] || !(navSeries["ALL"].values || []).length) {
+        buildFallbackData();
+        computeSeries();
+      }
+      computeMetrics();
+      setPerf("live");
+      setRange(activeRange);
+    }
+    async function loadHistory() {
+      // Try CoinGecko history
+      try {
+        const url = "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=1500&interval=daily&precision=2";
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("History fetch failed");
+        const json = await res.json();
+        priceData = (json.prices || []).map(([ts, p]) => ({ t: new Date(ts), p }));
+        dailyReturns = priceData.map((d, i) => i === 0 ? 0 : d.p / priceData[i-1].p - 1).slice(1);
+        priceSpotUsd = priceData.length ? priceData[priceData.length-1].p : null;
+        if (priceData.length > 1) {
+          const prev = priceData[priceData.length-2].p;
+          price24h = ((priceSpotUsd - prev)/prev)*100;
+        }
+        priceProvider = "coingecko";
+        await fetchNokFromSpot();
+        return;
+      } catch (err) {
+        console.warn("CoinGecko history failed, trying Binance", err);
+      }
+      // Fallback to Binance klines
+      const urlBin = "https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=1000";
+      const resBin = await fetch(urlBin);
+      if (!resBin.ok) throw new Error("Binance history failed");
+      const jsonBin = await resBin.json();
+      priceData = jsonBin.map(k => ({ t: new Date(k[0]), p: parseFloat(k[4]) }));
+      dailyReturns = priceData.map((d, i) => i === 0 ? 0 : d.p / priceData[i-1].p - 1).slice(1);
+      priceSpotUsd = priceData.length ? priceData[priceData.length-1].p : null;
+      if (priceData.length > 1) {
+        const prev = priceData[priceData.length-2].p;
+        price24h = ((priceSpotUsd - prev)/prev)*100;
+      }
+      priceProvider = "binance";
+      await fetchNokFromSpot();
+    }
+    function buildFallbackData() {
+      priceData = [];
+      const start = new Date();
+      start.setDate(start.getDate() - 179);
+      let val = 20000;
+      for (let i = 0; i < 180; i++) {
+        val *= 1 + 0.0008 + (Math.random() - 0.5) * 0.002;
+        priceData.push({ t: new Date(start.getTime() + i*dayMs), p: Math.max(15000, val) });
+      }
+      dailyReturns = priceData.map((d, i) => i === 0 ? 0 : d.p / priceData[i-1].p - 1).slice(1);
+      priceSpotUsd = priceData[priceData.length-1].p;
+      priceProvider = "syntetisk";
+      priceSpotNok = null;
+      price24h = null;
+    }
+    function computeSeries() {
+      if (!priceData.length) {
+        buildFallbackData();
+      }
+      navSeries = {
+        "1M": sliceWithDates(30),
+        "3M": sliceWithDates(90),
+        "YTD": sliceYtdWithDates(),
+        "1Y": sliceWithDates(365),
+        "ALL": sliceWithDates(priceData.length)
+      };
+      monthlyPerf = calcMonthly();
+    }
+    function sliceWithDates(days) {
+      if (!priceData.length) return { values: [], dates: [] };
+      const slice = priceData.slice(Math.max(0, priceData.length - days));
+      return { values: slice.map(d => d.p), dates: buildDates(slice) };
+    }
+    function sliceYtdWithDates() {
+      if (!priceData.length) return { values: [], dates: [] };
+      const yearStart = new Date(priceData[priceData.length -1].t);
+      yearStart.setMonth(0,1); yearStart.setHours(0,0,0,0);
+      const idx = priceData.findIndex(d => d.t >= yearStart);
+      const slice = priceData.slice(idx === -1 ? 0 : idx);
+      return { values: slice.map(d => d.p), dates: buildDates(slice) };
+    }
+    function calcMonthly() {
+      const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      const now = new Date();
+      const perf = {};
+      for (let i = 11; i >=0; i--) {
+        const m = new Date(now.getFullYear(), now.getMonth()-i, 1);
+        const next = new Date(m.getFullYear(), m.getMonth()+1, 1);
+        const slice = priceData.filter(d => d.t >= m && d.t < next);
+        if (slice.length < 2) {
+          perf[months[m.getMonth()]] = "n/a";
+          continue;
+        }
+        const r = (slice[slice.length-1].p / slice[0].p - 1) * 100;
+        perf[months[m.getMonth()]] = r;
+      }
+      const first = priceData.length ? priceData[0].p : 0;
+      const last = priceData.length ? priceData[priceData.length-1].p : 0;
+      perf["År"] = first ? ((last/first -1) * 100) : "n/a";
+      return perf;
+    }
+    function computeMetrics() {
+      if (!priceData.length) return;
+      const closes = priceData.map(p => p.p);
+      const last = closes[closes.length-1];
+      const prev = closes[closes.length-2] || last;
+      const prev30 = closes[Math.max(0, closes.length-31)] || last;
+      const ytdArr = navSeries["YTD"];
+      const ytdStart = ytdArr.length ? ytdArr[0] : last;
+      const ret = (a,b)=> b ? ((a/b -1)*100) : 0;
+      const vol = annVol(dailyReturns.slice(-30));
+      const ddStats = maxDrawdown(closes);
+      const sharpe = ratio(dailyReturns, false);
+      const sortino = ratio(dailyReturns, true);
+      const lastMonthVal = Object.values(monthlyPerf).slice(-2,-1)[0];
+      const winMonths = Object.values(monthlyPerf).filter(v => typeof v === "number" && v > 0).length;
+      const lossMonths = Object.values(monthlyPerf).filter(v => typeof v === "number" && v < 0);
+      metrics = {
+        price: priceSpotUsd || last,
+        chg24: price24h !== null ? price24h : ret(last, prev),
+        chg30: ret(last, prev30),
+        ytd: ret(last, ytdStart),
+        vol,
+        maxDD: ddStats.maxDD,
+        curDD: ddStats.curDD,
+        sharpe,
+        sortino,
+        lastMonth: lastMonthVal,
+        m3: ret(last, closes[Math.max(0, closes.length-91)]),
+        m12: ret(last, closes[Math.max(0, closes.length-366)]),
+        ann: annReturn(closes),
+        win: `${winMonths} / 12`,
+        avgWin: avg(lossMonths, true, true),
+        avgLoss: avg(lossMonths, false, true),
+        cum: ret(last, closes[0])
+      };
+      updateUi();
+    }
+    function renderCharts(range) {
+      let seriesObj = navSeries[range] || navSeries["ALL"] || { values: [], dates: [] };
+      let series = seriesObj.values || [];
+      if (!series.length && navSeries["ALL"] && navSeries["ALL"].values) {
+        series = navSeries["ALL"].values;
+        seriesObj = navSeries["ALL"];
+      }
+      if (!series.length) {
+        buildFallbackData();
+        computeSeries();
+        seriesObj = navSeries[range] || navSeries["ALL"] || { values: [], dates: [] };
+        series = seriesObj.values || [];
+      }
+      if (!series.length) {
+        return;
+      }
+      navDates = (seriesObj.dates && seriesObj.dates.length) ? seriesObj.dates : buildDates(series.map((v,i)=>({t:new Date(Date.now()- (series.length-i-1)*dayMs)})));
+      const dd = drawDrawdown("dd-chart", series);
+      drawLine("nav-chart", series);
+      const ddTip = document.getElementById("dd-tip");
+      if (ddTip) ddTip.innerHTML = `Max drawdown: ${dd.maxDD}%`;
+    }
+    function renderChartsFs() {
+      const seriesObj = navSeries[activeRange] || navSeries["ALL"] || { values: [], dates: [] };
+      const series = seriesObj.values || [];
+      if (!series.length) return;
+      const dates = (seriesObj.dates && seriesObj.dates.length) ? seriesObj.dates : buildDates(series.map((v,i)=>({t:new Date(Date.now()- (series.length-i-1)*dayMs)})));
+      navDates = dates;
+      const dd = drawDrawdown("dd-chart-fs", series);
+      drawLine("nav-chart-fs", series);
+      const ddTip = document.getElementById("dd-tip-fs");
+      if (ddTip) ddTip.innerHTML = `Max drawdown: ${dd.maxDD}%`;
+      // sync hover on full-screen chart
+      const svgFs = document.getElementById("nav-chart-fs");
+      const tipFs = document.getElementById("nav-tip-fs");
+      const handleFsHover = (e) => {
+        const rect = svgFs.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        if (!series.length) return;
+        const idx = Math.min(series.length - 1, Math.max(0, Math.round(x / rect.width * (series.length - 1))));
+        const val = series[idx];
+        const prev = idx === 0 ? val : series[idx - 1];
+        const daily = ((val - prev) / prev * 100).toFixed(2);
+        const date = dates[idx] || `Dag ${idx+1}`;
+        tipFs.innerHTML = `Dato: ${date}<br>Verdi: ${val.toFixed(2)}<br>Daglig: ${daily}%`;
+        const cross = document.getElementById("nav-cross-fs");
+        const dot = document.getElementById("nav-dot-fs");
+        const pt = navPointsFs[idx];
+        if (pt && cross && dot) {
+          cross.setAttribute("x1", pt[0]);
+          cross.setAttribute("x2", pt[0]);
+          cross.setAttribute("opacity", 1);
+          dot.setAttribute("cx", pt[0]);
+          dot.setAttribute("cy", pt[1]);
+          dot.setAttribute("opacity", 1);
+        }
+        const ddCross = document.getElementById("dd-cross-fs");
+        const ddDot = document.getElementById("dd-dot-fs");
+        const ddPt = ddPointsFs[idx];
+        if (ddPt && ddCross && ddDot) {
+          ddCross.setAttribute("x1", ddPt[0]);
+          ddCross.setAttribute("x2", ddPt[0]);
+          ddCross.setAttribute("opacity", 1);
+          ddDot.setAttribute("cx", ddPt[0]);
+          ddDot.setAttribute("cy", ddPt[1]);
+          ddDot.setAttribute("opacity", 1);
+        }
+      };
+      const handleFsLeave = () => {
+        ["nav-cross-fs","nav-dot-fs","dd-cross-fs","dd-dot-fs"].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.setAttribute("opacity", 0);
+        });
+      };
+      svgFs.onmousemove = handleFsHover;
+      svgFs.onmouseleave = handleFsLeave;
+    }
+    function updateUi() {
+      const fmtPct = (v) => typeof v === "number" ? `${v.toFixed(2)}%` : v;
+      const fmtPct1 = (v) => typeof v === "number" ? `${v.toFixed(1)}%` : v;
+      const set = (id, val, color) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = val;
+        if (color) el.style.color = color;
+      };
+      set("kpi-price", `$${metrics.price ? metrics.price.toLocaleString("en-US", {maximumFractionDigits:0}) : "--"}`);
+      set("kpi-24h", fmtPct(metrics.chg24), metrics.chg24 >=0 ? "var(--positive)" : "var(--negative)");
+      set("kpi-30d", fmtPct1(metrics.chg30), metrics.chg30 >=0 ? "var(--positive)" : "var(--negative)");
+      set("kpi-30d-delta", "Siste 30 dager");
+      set("kpi-ytd", fmtPct1(metrics.ytd), metrics.ytd >=0 ? "var(--positive)" : "var(--negative)");
+      set("kpi-ytd-delta", "YTD");
+      set("kpi-vol", fmtPct1(metrics.vol), "var(--text-main)");
+      set("kpi-vol-note", "Ann. 30d");
+      set("kpi-dd", fmtPct1(metrics.maxDD), "var(--negative)");
+      set("kpi-dd-now", `Nå: ${fmtPct1(metrics.curDD)}`);
+      set("kpi-sharpe", (metrics.sharpe || 0).toFixed(2));
+      set("kpi-sharpe-note", `Sortino ${(metrics.sortino || 0).toFixed(2)}`);
+
+      set("risk-last-month", fmtPct1(metrics.lastMonth));
+      set("risk-3m", fmtPct1(metrics.m3));
+      set("risk-ytd", fmtPct1(metrics.ytd));
+      set("risk-12m", fmtPct1(metrics.m12));
+      set("risk-ann", fmtPct1(metrics.ann*100));
+      set("risk-win", metrics.win);
+      set("risk-avg-win", metrics.avgWin);
+      set("risk-avg-loss", metrics.avgLoss);
+      set("risk-cum", fmtPct1(metrics.cum));
+      set("risk-sterling", "n/a");
+      set("risk-calmar", "n/a");
+      set("risk-skew", fmtPct1(skew(dailyReturns)));
+      set("risk-kurt", fmtPct1(kurt(dailyReturns)));
+      set("risk-downside", fmtPct1(downsideDev(dailyReturns)*100));
+      setGauge("g-sharpe-val", metrics.sharpe, 3.0, ["#3f8bc6", "#59b49d"]);
+      setGauge("g-sortino-val", metrics.sortino, 3.0, ["#59b49d", "#3f8bc6"]);
+      setGauge("g-dd-val", Math.abs(metrics.maxDD), 60, ["#d85f5f", "#5a1d1d"]);
+      setGauge("g-vol-val", metrics.vol, 120, ["#59b49d", "#3f8bc6"]);
+      // Refresh performance table to live data
+      buildPerfTable(monthlyPerf);
+      // Refresh charts with new data
+      setRange(activeRange);
+      renderChartsFs();
+      // Update BTC panel status
+      if (priceSpotUsd) btcUsd.textContent = `$${Number(priceSpotUsd).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+      if (priceSpotNok) btcNok.textContent = `${Number(priceSpotNok).toLocaleString("no-NO", { maximumFractionDigits: 0 })} NOK`;
+      if (price24h !== null) {
+        btcChg.textContent = `${price24h.toFixed(2)}%`;
+        btcChg.style.color = price24h >= 0 ? "var(--positive)" : "var(--negative)";
+      }
+      btcStatus.textContent = priceProvider === "coingecko" ? "Live fra CoinGecko" : priceProvider === "binance" ? "Live fra Binance (historikk) + NOK fra CG" : "Fallback syntetisk";
+    }
+    function setGauge(id, value, max, colors) {
+      const span = document.getElementById(id);
+      const gauge = span ? span.closest(".gauge") : null;
+      if (!span || !gauge) return;
+      span.textContent = typeof value === "number" ? value.toFixed(2) : "--";
+      const pct = Math.max(0, Math.min(1, (value || 0) / max)) * 100;
+      gauge.style.setProperty("--value", `${pct}%`);
+      const gradient = colors && colors.length > 1
+        ? `conic-gradient(${colors[0]} var(--value), ${colors[1]} 0)`
+        : `conic-gradient(${colors[0] || "var(--accent)"} var(--value), rgba(255,255,255,0.06) 0)`;
+      gauge.style.background = gradient;
+    }
+    function skew(rets) {
+      if (!rets.length) return 0;
+      const m = rets.reduce((a,b)=>a+b,0)/rets.length;
+      const s3 = rets.reduce((a,b)=>a+Math.pow(b-m,3),0)/rets.length;
+      const s2 = rets.reduce((a,b)=>a+Math.pow(b-m,2),0)/rets.length;
+      return s3/Math.pow(Math.sqrt(s2) || 1e-6,3);
+    }
+    function kurt(rets) {
+      if (!rets.length) return 0;
+      const m = rets.reduce((a,b)=>a+b,0)/rets.length;
+      const s4 = rets.reduce((a,b)=>a+Math.pow(b-m,4),0)/rets.length;
+      const s2 = rets.reduce((a,b)=>a+Math.pow(b-m,2),0)/rets.length;
+      return s4/Math.pow(s2 || 1e-6,2);
+    }
+    function downsideDev(rets) {
+      const neg = rets.filter(r => r < 0);
+      if (!neg.length) return 0;
+      const mean = neg.reduce((a,b)=>a+b,0)/neg.length;
+      const varr = neg.reduce((a,b)=>a+Math.pow(b-mean,2),0)/neg.length;
+      return Math.sqrt(varr) * Math.sqrt(252);
+    }
+    function annVol(returns) {
+      if (!returns.length) return 0;
+      const mean = returns.reduce((a,b)=>a+b,0)/returns.length;
+      const varr = returns.reduce((a,b)=>a+Math.pow(b-mean,2),0)/returns.length;
+      return Math.sqrt(varr) * Math.sqrt(252) * 100;
+    }
+    function annReturn(closes) {
+      if (closes.length < 2) return 0;
+      const total = closes[closes.length-1]/closes[0]-1;
+      const years = closes.length/252;
+      return Math.pow(1+total, 1/years) -1;
+    }
+    async function fetchNokFromSpot() {
+      try {
+        const url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=nok&include_24hr_change=true";
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("nok fetch fail");
+        const json = await res.json();
+        const data = json.bitcoin;
+        if (data && data.nok) {
+          priceSpotNok = data.nok;
+          if (data.nok_24h_change !== undefined) price24h = data.nok_24h_change;
+          return;
+        }
+      } catch (e) {
+        console.warn("NOK fetch failed", e);
+      }
+      priceSpotNok = priceSpotUsd ? priceSpotUsd * 10.0 : null;
+      if (price24h === null && priceSpotUsd && priceData.length > 1) {
+        const prev = priceData[priceData.length-2].p;
+        price24h = ((priceSpotUsd - prev)/prev)*100;
+      }
+    }
+    function maxDrawdown(arr) {
+      let peak = arr[0] || 0;
+      let maxDD = 0;
+      let curDD = 0;
+      arr.forEach(v => {
+        if (v > peak) peak = v;
+        const dd = (v/peak -1);
+        if (dd < maxDD) maxDD = dd;
+        curDD = dd;
+      });
+      return { maxDD: maxDD*100, curDD: curDD*100 };
+    }
+    function ratio(rets, downsideOnly) {
+      if (!rets.length) return 0;
+      const filt = downsideOnly ? rets.filter(r => r < 0) : rets;
+      const mean = rets.reduce((a,b)=>a+b,0)/rets.length;
+      const denom = filt.length ? Math.sqrt(filt.reduce((a,b)=>a+Math.pow(b,2),0)/filt.length) : 0.0001;
+      return mean/denom * Math.sqrt(252);
+    }
+    function avg(list, positive=true, pct=true) {
+      const filtered = list.filter(v => typeof v === "number" && (positive ? v>0 : v<0));
+      if (!filtered.length) return "n/a";
+      const m = filtered.reduce((a,b)=>a+b,0)/filtered.length;
+      return pct ? `${m.toFixed(1)}%` : m.toFixed(2);
+    }
+    function setRange(range) {
+      activeRange = range;
+      document.querySelectorAll(".chip").forEach(c => c.classList.toggle("active", c.dataset.range === range));
+      renderCharts(range);
+    }
+    function setPerf(preset) {
+      buildPerfTable(monthlyPerf);
+    }
+    async function init() {
+      await initData();
+      const tip = document.getElementById("nav-tip");
+      const svg = document.getElementById("nav-chart");
+      svg.addEventListener("mousemove", handleHover);
+      svg.addEventListener("mouseleave", handleLeave);
+      document.querySelectorAll(".chip").forEach(chip => {
+        chip.addEventListener("click", () => setRange(chip.dataset.range));
+      });
+      enableDetailClicks();
+      enableCommentaryToggle();
+      if (btcRefresh) btcRefresh.addEventListener("click", () => initData());
+      const fsOpen = document.getElementById("fs-open");
+      const fsClose = document.getElementById("fs-close");
+      const fsOverlay = document.getElementById("fs-overlay");
+      if (fsOpen && fsClose && fsOverlay) {
+        fsOpen.addEventListener("click", () => {
+          fsOverlay.style.display = "flex";
+          renderChartsFs();
+        });
+        fsClose.addEventListener("click", () => {
+          fsOverlay.style.display = "none";
+        });
+      }
+    }
+    function handleHover(e) {
+      const tip = document.getElementById("nav-tip");
+      const svg = document.getElementById("nav-chart");
+      const rect = svg.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const seriesObj = navSeries[activeRange] || navSeries["ALL"] || { values: [], dates: [] };
+      const series = seriesObj.values || [];
+      const dates = seriesObj.dates || [];
+      if (!series.length) return;
+      const idx = Math.min(series.length - 1, Math.max(0, Math.round(x / rect.width * (series.length - 1))));
+      const val = series[idx];
+      const prev = idx === 0 ? val : series[idx - 1];
+      const daily = ((val - prev) / prev * 100).toFixed(2);
+      const date = dates[idx] || navDates[idx] || `Dag ${idx+1}`;
+      tip.innerHTML = `Dato: ${date}<br>Verdi: ${val.toFixed(2)}<br>Daglig: ${daily}%`;
+      const cross = document.getElementById("nav-cross");
+      const dot = document.getElementById("nav-dot");
+      const pt = navPoints[idx];
+      if (pt) {
+        cross.setAttribute("x1", pt[0]);
+        cross.setAttribute("x2", pt[0]);
+        cross.setAttribute("opacity", 1);
+        dot.setAttribute("cx", pt[0]);
+        dot.setAttribute("cy", pt[1]);
+        dot.setAttribute("opacity", 1);
+      }
+      const ddCross = document.getElementById("dd-cross");
+      const ddDot = document.getElementById("dd-dot");
+      const ddPt = ddPoints[idx];
+      if (ddPt) {
+        ddCross.setAttribute("x1", ddPt[0]);
+        ddCross.setAttribute("x2", ddPt[0]);
+        ddCross.setAttribute("opacity", 1);
+        ddDot.setAttribute("cx", ddPt[0]);
+        ddDot.setAttribute("cy", ddPt[1]);
+        ddDot.setAttribute("opacity", 1);
+      }
+    }
+    function handleLeave() {
+      const ids = ["nav-cross","nav-dot","dd-cross","dd-dot"];
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.setAttribute("opacity", 0);
+      });
+    }
+
+    function showDetail(title, body) {
+      actionPanel.style.display = "grid";
+      actionPanel.querySelector("h4").textContent = title;
+      actionPanel.querySelector(".body").textContent = body;
+    }
+    const explanations = {
+      "sharpe": "Sharpe-ratio: forholdet mellom meravkastning og total volatilitet.",
+      "sortino": "Sortino-ratio: som Sharpe, men straffer bare nedsidevolatilitet.",
+      "max drawdown": "Største historiske fall fra topp til bunn før ny topp.",
+      "vol (ann.)": "Annualisert volatilitet basert på siste 30 dager.",
+      "forrige mnd": "Siste fullførte månedsavkastning.",
+      "ytd": "Akkumulert avkastning fra årsskiftet.",
+      "3 mnd": "Rullerende tre måneders avkastning.",
+      "12 mnd": "Rullerende tolv måneders avkastning.",
+      "36 mnd": "Rullerende tre års avkastning.",
+      "totalt (annualisert)": "Annualisert totalavkastning siden oppstart.",
+      "vinnede mnd": "Andel måneder med positiv avkastning.",
+      "downside dev.": "Volatilitet kun på negative avkastninger."
+    };
+    function enableDetailClicks() {
+      document.querySelectorAll(".clickable").forEach(el => {
+        el.addEventListener("click", () => {
+          const payload = el.dataset.detail || "";
+          const [title, body, value] = payload.split("|");
+          const text = value ? `${body} • ${value}` : body;
+          const extra = explanations[(title || "").toLowerCase()];
+          const finalBody = extra ? `${text} • ${extra}` : text;
+          showDetail(title || "Detalj", finalBody || "Ingen info");
+          el.classList.add("active-blink");
+          setTimeout(() => el.classList.remove("active-blink"), 250);
+        });
+      });
+    }
+    function enableCommentaryToggle() {
+      const toggle = document.getElementById("commentary-toggle");
+      const body = document.getElementById("commentary-body");
+      const fullText = body.textContent + " Fokus på flyt mellom NOK/USD og timing av risikobudsjett. Neste uke vurderes økt aksjeeksponering dersom USDNOK stabiliseres.";
+      let expanded = false;
+      toggle.addEventListener("click", () => {
+        expanded = !expanded;
+        body.textContent = expanded ? fullText : body.textContent.split(" Fokus på")[0];
+        toggle.textContent = expanded ? "Vis mindre ↑" : "Les mer →";
+        showDetail("Kommentar", expanded ? "Utvidet markedskommentar åpnet." : "Kommentar lukket.");
+      });
+    }
+    // Lukk action-panel når man trykker på Esc
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") actionPanel.style.display = "none";
+    });
+    actionClose.addEventListener("click", () => {
+      actionPanel.style.display = "none";
+    });
+    init();
+  </script>
+</body>
+</html>
