@@ -659,14 +659,6 @@
         <div class="title">Ace Fund</div>
         <div class="sub">Norge • AIF</div>
       </div>
-      <div class="chip-row">
-        <div class="chip active" data-range="1M">1M</div>
-        <div class="chip" data-range="3M">3M</div>
-        <div class="chip" data-range="YTD">YTD</div>
-        <div class="chip" data-range="1Y">1Y</div>
-        <div class="chip" data-range="3Y">3Y</div>
-        <div class="chip" data-range="ALL">All</div>
-      </div>
     </div>
     <div class="top-right">
       <span>Sist oppdatert: 21.12.2024 12:05</span>
@@ -709,7 +701,17 @@
 
     <section class="panel" data-id="nav" style="grid-column: span 8;">
       <h3>Verdigraf</h3>
-      <button class="fs-btn" id="fs-open">Fullskjerm</button>
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <div class="chip-row">
+          <div class="chip active" data-range="1M">1M</div>
+          <div class="chip" data-range="3M">3M</div>
+          <div class="chip" data-range="YTD">YTD</div>
+          <div class="chip" data-range="1Y">1Y</div>
+          <div class="chip" data-range="3Y">3Y</div>
+          <div class="chip" data-range="ALL">All</div>
+        </div>
+        <button class="fs-btn" id="fs-open">Fullskjerm</button>
+      </div>
       <div class="chart-area">
         <div class="chart-box">
           <div class="chart-grid"></div>
@@ -904,7 +906,7 @@
   <div class="fs-overlay" id="fs-overlay">
     <div class="fs-bar">
       <span>Verdigraf • Fullskjerm</span>
-      <button class="fs-close" id="fs-close">Lukk</button>
+      <button class="fs-close" id="fs-close">Avslutt fullskjerm</button>
     </div>
     <div class="fs-content">
       <div class="chart-box" style="height:100%;">
