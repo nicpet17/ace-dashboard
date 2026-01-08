@@ -616,17 +616,34 @@
     }
     @media (max-width: 800px) {
       .main { grid-template-columns: repeat(1, 1fr); }
+      .main { padding: 10px 10px 16px; gap: 10px; }
+      .panel { padding: 12px; }
       .kpi-row { grid-template-columns: repeat(2, 1fr); }
-      .gauges { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .gauges { grid-template-columns: 1fr; }
+      .risk-table { grid-template-columns: 1fr; }
       .split-panel { grid-template-columns: 1fr; }
+      .allocation { grid-template-columns: 1fr; }
+      .donut { width: 130px; height: 130px; }
+      .donut::after { width: 96px; height: 96px; }
+      .chart-area { grid-template-rows: 220px 110px; }
+      .chart-box { padding: 8px; }
       .topbar { flex-direction: column; align-items: flex-start; gap: 8px; padding: 10px 12px; }
+      .top-left { flex-wrap: wrap; }
       .top-right { width: 100%; justify-content: space-between; }
       .chip-row { flex-wrap: wrap; }
-      .data-table { font-size: 11px; min-width: 560px; }
+      .data-table { font-size: 11px; min-width: 520px; }
       .data-table th { font-size: 10px; }
+      .action-panel { right: 10px; left: 10px; width: auto; }
     }
     @media (max-width: 600px) {
       .kpi-row { grid-template-columns: 1fr; }
+      .emblem { width: 120px; }
+      .flightline .title { font-size: 14px; }
+      .kpi .value { font-size: 20px; }
+      .tooltip { font-size: 11px; }
+      .position-head { grid-template-columns: 1fr 56px 60px 50px; font-size: 10px; }
+      .position-row { grid-template-columns: 1fr 56px 60px 50px; font-size: 11px; }
+      .ticker-row strong { font-size: 14px; }
     }
   </style>
 </head>
