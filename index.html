@@ -520,6 +520,13 @@
       padding: 12px;
       gap: 10px;
     }
+    .fs-controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .fs-controls .chip { min-width: 52px; }
+    body.fullscreen .topbar { display: none; }
     .fs-bar {
       display: flex;
       justify-content: space-between;
@@ -907,6 +914,16 @@
     <div class="fs-bar">
       <span>Verdigraf • Fullskjerm</span>
       <button class="fs-close" id="fs-close">Avslutt fullskjerm</button>
+    </div>
+    <div class="fs-controls">
+      <div class="chip-row">
+        <div class="chip active" data-range="1M">1M</div>
+        <div class="chip" data-range="3M">3M</div>
+        <div class="chip" data-range="YTD">YTD</div>
+        <div class="chip" data-range="1Y">1Y</div>
+        <div class="chip" data-range="3Y">3Y</div>
+        <div class="chip" data-range="ALL">All</div>
+      </div>
     </div>
     <div class="fs-content">
       <div class="chart-box" style="height:100%;">
@@ -1521,10 +1538,12 @@
       if (fsOpen && fsClose && fsOverlay) {
         fsOpen.addEventListener("click", () => {
           fsOverlay.style.display = "flex";
+          document.body.classList.add("fullscreen");
           renderChartsFs();
         });
         fsClose.addEventListener("click", () => {
           fsOverlay.style.display = "none";
+          document.body.classList.remove("fullscreen");
         });
       }
     }
