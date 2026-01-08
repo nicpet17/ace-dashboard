@@ -143,7 +143,7 @@
     .panel {
       background: var(--panel);
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 12px;
       padding: 14px 14px 12px;
       display: flex;
       flex-direction: column;
@@ -167,6 +167,10 @@
       letter-spacing: 0.3px;
       color: var(--text-dim);
       text-transform: uppercase;
+    }
+    .panel h3.section {
+      font-size: 12px;
+      letter-spacing: 0.6px;
     }
     .kpi-row {
       grid-column: 1 / -1;
@@ -254,6 +258,39 @@
       border-bottom: 1px solid var(--border);
     }
     th { color: var(--text-dim); font-weight: 600; }
+    .table-scroll { overflow-x: auto; }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      color: var(--text-main);
+      min-width: 520px;
+    }
+    .data-table th {
+      text-align: left;
+      padding: 8px 6px;
+      color: var(--text-dim);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      border-bottom: 1px solid var(--border);
+    }
+    .data-table td {
+      padding: 8px 6px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .pos { color: var(--positive); }
+    .neg { color: var(--negative); }
+    .muted { color: var(--text-dim); }
+    .pill-tag {
+      padding: 2px 6px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-dim);
+    }
     .heat { border-radius: 8px; padding: 6px; }
     .allocation {
       display: grid;
@@ -401,6 +438,11 @@
       font-size: 12px;
     }
     .fund-info strong { color: var(--text-main); }
+    .split-panel {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
     .action-panel {
       position: fixed;
       right: 18px;
@@ -576,6 +618,12 @@
       .main { grid-template-columns: repeat(1, 1fr); }
       .kpi-row { grid-template-columns: repeat(2, 1fr); }
       .gauges { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .split-panel { grid-template-columns: 1fr; }
+      .topbar { flex-direction: column; align-items: flex-start; gap: 8px; padding: 10px 12px; }
+      .top-right { width: 100%; justify-content: space-between; }
+      .chip-row { flex-wrap: wrap; }
+      .data-table { font-size: 11px; min-width: 560px; }
+      .data-table th { font-size: 10px; }
     }
     @media (max-width: 600px) {
       .kpi-row { grid-template-columns: 1fr; }
@@ -639,6 +687,45 @@
       </div>
     </section>
 
+    <section class="panel" data-id="currency-perf" style="grid-column: 1 / -1;">
+      <h3 class="section">Valuta performance</h3>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Valuta</th>
+              <th>Nov</th>
+              <th>Des</th>
+              <th>2025</th>
+              <th>Jan</th>
+              <th>2026</th>
+              <th>All</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>NOK</td>
+              <td class="pos">6,05%</td>
+              <td class="neg">-0,93%</td>
+              <td class="pos">+5,06%</td>
+              <td class="pos">+1,81%</td>
+              <td class="pos">+1,81%</td>
+              <td class="pos">+6,96%</td>
+            </tr>
+            <tr>
+              <td>USD</td>
+              <td class="pos">5,12%</td>
+              <td class="neg">-0,02%</td>
+              <td class="pos">+5,09%</td>
+              <td class="pos">+1,66%</td>
+              <td class="pos">+1,66%</td>
+              <td class="pos">+6,83%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
     <section class="panel" data-id="nav" style="grid-column: span 8;">
       <h3>Verdigraf</h3>
       <button class="fs-btn" id="fs-open">Fullskjerm</button>
@@ -676,6 +763,114 @@
             <div class="legend-row" style="color:var(--text-main);">Kontant buffer: 40 dager drift</div>
           </div>
         </div>
+      </div>
+    </section>
+
+    <section class="panel" data-id="holdings" style="grid-column: span 8;">
+      <h3 class="section">Beholdning</h3>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Instrument</th>
+              <th>Beholdning</th>
+              <th>Pris</th>
+              <th>Verdi (USD)</th>
+              <th>Verdi (NOK)</th>
+              <th>Allok.</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Strategy Inc (XNAS:MSTR)</td>
+              <td>21</td>
+              <td>161,83</td>
+              <td>3 398</td>
+              <td>34 304</td>
+              <td>0,6%</td>
+            </tr>
+            <tr>
+              <td>Strategy Inc (XNAS:STRC)</td>
+              <td>3 500</td>
+              <td>99,99</td>
+              <td>349 965</td>
+              <td>3 532 582</td>
+              <td>65,9%</td>
+            </tr>
+            <tr>
+              <td>Strategy Inc (XNAS:STRD)</td>
+              <td>1 950</td>
+              <td>77,00</td>
+              <td>150 150</td>
+              <td>1 515 629</td>
+              <td>28,3%</td>
+            </tr>
+            <tr>
+              <td>Strategy Inc (XNAS:STRK)</td>
+              <td class="muted">-</td>
+              <td>84,690</td>
+              <td class="muted">-</td>
+              <td class="muted">-</td>
+              <td>0,0%</td>
+            </tr>
+            <tr>
+              <td class="muted">Cash Pareto</td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td>4 000</td>
+              <td>0,1%</td>
+            </tr>
+            <tr>
+              <td class="muted">Cash Nordnet</td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td>273 043</td>
+              <td>5,1%</td>
+            </tr>
+            <tr>
+              <td class="muted">Sum</td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td>5 359 558</td>
+              <td>100,0%</td>
+            </tr>
+            <tr>
+              <td class="muted">High watermark</td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td>5 302 645</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td class="muted">Gev./Tap januar</td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td>56 913</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td class="muted">Performance fee</td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td>11 383</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td><strong>AUM</strong></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td><strong>5 348 175</strong></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
@@ -800,8 +995,104 @@
       </div>
     </section>
 
+    <section class="panel" data-id="monthly-stats" style="grid-column: 1 / -1;">
+      <h3 class="section">Monthly statistics</h3>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>ACE/NOK</th>
+              <th>ACE/USD</th>
+              <th>BTC/NOK</th>
+              <th>BTC/USD</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="muted">Last Month Return</td>
+              <td>-0,9%</td>
+              <td>0,0%</td>
+              <td>3,1%</td>
+              <td>3,0%</td>
+            </tr>
+            <tr>
+              <td class="muted">3 Month Return</td>
+              <td>7,0%</td>
+              <td>6,8%</td>
+              <td>-17,6%</td>
+              <td>-17,8%</td>
+            </tr>
+            <tr>
+              <td class="muted">Year to Date Return</td>
+              <td>1,8%</td>
+              <td>1,7%</td>
+              <td>3,1%</td>
+              <td>3,0%</td>
+            </tr>
+            <tr>
+              <td class="muted">Total Return Annualized</td>
+              <td>36,9%</td>
+              <td>36,1%</td>
+              <td class="muted">n/a</td>
+              <td class="muted">n/a</td>
+            </tr>
+            <tr>
+              <td class="muted">Total Return Cumulative</td>
+              <td>7,0%</td>
+              <td>6,8%</td>
+              <td>-17,6%</td>
+              <td>-17,8%</td>
+            </tr>
+            <tr>
+              <td class="muted">Maximum Drawdown</td>
+              <td>-0,9%</td>
+              <td>0,0%</td>
+              <td>-20,1%</td>
+              <td>-21,6%</td>
+            </tr>
+            <tr>
+              <td class="muted">Annualized Volatility</td>
+              <td>12,2%</td>
+              <td>9,1%</td>
+              <td>34,9%</td>
+              <td>36,4%</td>
+            </tr>
+            <tr>
+              <td class="muted">Winning Months (%)</td>
+              <td>66,7%</td>
+              <td>66,7%</td>
+              <td>33,3%</td>
+              <td>33,3%</td>
+            </tr>
+            <tr>
+              <td class="muted">Average Winning Month</td>
+              <td>3,9%</td>
+              <td>3,4%</td>
+              <td>3,1%</td>
+              <td>3,0%</td>
+            </tr>
+            <tr>
+              <td class="muted">Average Losing Month</td>
+              <td>-0,9%</td>
+              <td>0,0%</td>
+              <td>-10,4%</td>
+              <td>-10,3%</td>
+            </tr>
+            <tr>
+              <td class="muted">Sharpe Ratio</td>
+              <td>2,0</td>
+              <td>2,6</td>
+              <td>-2,1</td>
+              <td>-2,0</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
     <section class="panel" data-id="about-disclaimer" style="grid-column: 1 / -1;">
-      <div style="display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px;">
+      <div class="split-panel">
         <div>
           <h3>Om fondet</h3>
           <div class="fund-info">
